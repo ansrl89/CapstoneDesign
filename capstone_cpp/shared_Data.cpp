@@ -7,7 +7,16 @@
 
 #include "shared_Data.hpp"
 
+// mission type
+int missionVariable = -1;	 // 핸드폰에서 미션 받음
 
+int lineStopFlag = 0;
+
+
+// net peer for desktop
+int peer_Desktop = -1;
+// stream peer for android
+int stream_Android = -1;
 
 // 모터 컨트롤 파일 디스크립터
 int uart_fd;
@@ -22,7 +31,7 @@ int semid;
 
 int initsem(key_t semkey) {
 
-	int status = 0, semid;
+	int status = 0;//, semid;
 
 	if ((semid = semget(semkey, 1, SEMPERM | IPC_CREAT | IPC_EXCL)) == -1)
 	{

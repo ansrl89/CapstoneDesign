@@ -16,11 +16,13 @@
 //const ColorBoundary green_B = {120, 168, 47, 100, 18, 100};
 
   // 코봇 동방
-const ColorBoundary blue_B = {190, 250, 40, 100, 50, 100};;
+const ColorBoundary blue_B = {175, 250, 40, 100, 40, 100};;
 
 const ColorBoundary red_B = {338, 20, 45, 100, 35, 100};
 const ColorBoundary yellow_B = {50, 80, 40, 100, 40, 100};
-const ColorBoundary green_B = {120, 168, 47, 100, 20, 100};
+//const ColorBoundary green_B = {100, 140, 47, 100, 20, 100};
+const ColorBoundary green_B = {71 , 100, 40, 100, 35, 100};
+
 
 //const ColorBoundary green_B = {100, 170, 20, 100, 30, 100};
 const ColorBoundary error_B = {-1, -1, -1, -1, -1, -1};
@@ -36,8 +38,17 @@ void *videoFrame(void*)
 			cout << "Cannot read a frame from camera" << endl;
 			exit(1);
 		}
+		p(semid);
+		memcpy(frameBuf, frame.data,sizeof(char)*WIDTH*HEIGHT*3);
+		v(semid);
 
-		memcpy(frameBuf, frame.data,sizeof(frameBuf));
+		if(peer_Desktop > 0)
+		{
+			write(peer_Desktop, frameBuf, sizeof(char)*WIDTH*HEIGHT*3);
+		}
+
+		if(stream_Android > 0)
+			write(stream_Android, frameBuf, sizeof(char)*WIDTH*HEIGHT*3);
 	}
 
 }
@@ -57,7 +68,11 @@ POINT findOneColor(int start_X, int end_X, int start_Y, int end_Y, int color)
 //	}
 
 //	unsigned char *input = (unsigned char*)(frame.data);
-	char *input = frameBuf;
+	char input[WIDTH*HEIGHT*3];
+	p(semid);
+	memcpy(input, frameBuf,sizeof(char)*WIDTH*HEIGHT*3);
+	v(semid);
+	//	char *input = frameBuf;
 	int cn = frame.channels();
 
 	// 변수 초기화
@@ -92,9 +107,9 @@ POINT findOneColor(int start_X, int end_X, int start_Y, int end_Y, int color)
 
 			if(isColor(hsv, color_B) == TRUE)
 			{
-				if(j > 160)
+				if(j > WIDTH/2)
 					right++;
-				else if(j < 160)
+				else if(j < WIDTH/2)
 					left++;
 			}
 //			cout << h << " " << s << " " << v << " " << endl;
@@ -127,7 +142,7 @@ POINT findOneColor(int start_X, int end_X, int start_Y, int end_Y, int color)
 	}
 
 	POINT r_p;
-	if(left + right > 20)
+	if(left + right > 30)
 	{
 //		cout << "left : " << left << ", right : " << right << endl;
 		if(left > right)
@@ -137,7 +152,7 @@ POINT findOneColor(int start_X, int end_X, int start_Y, int end_Y, int color)
 		}
 		else if(right > left)
 		{
-			r_p.x = 310;
+			r_p.x = WIDTH-10;
 			r_p.y = 10;
 			return r_p;
 		}
@@ -150,6 +165,81 @@ POINT findOneColor(int start_X, int end_X, int start_Y, int end_Y, int color)
 	}
 	return r_p;
 }
+
+POINT find_Pos_Of_Color(int minX, int maxX, int color)
+{
+	// 찾는 색 분석
+	ColorBoundary color_B = getBoundary(color);
+
+	char input[WIDTH*HEIGHT*3];
+	p(semid);
+	memcpy(input, frameBuf,sizeof(char)*WIDTH*HEIGHT*3);
+	v(semid);
+	//	char *input = frameBuf;
+	int cn = frame.channels();
+
+	// 변수 초기화
+	int flag = FALSE;
+	float r, g, b;
+	POINT reValue = {-1, -1};
+
+
+	for(int i = HEIGHT-10;i > 1 ;i--)
+	{
+		for(int j = minX;j < maxX ;j++)
+		{
+			b = input[frame.cols*cn*i + j*cn + 0];
+			g = input[frame.cols*cn*i + j*cn + 1];
+			r = input[frame.cols*cn*i + j*cn + 2];
+
+			float h, s, v;
+			RGBtoHSV(r, g, b, &h, &s, &v);
+
+			HSV hsv = {h, s, v};
+
+			if(isColor(hsv, color_B) == TRUE)
+			{
+				int cnt = 0;
+				for(int m = -2; m < 3; m++)
+				{
+					for(int n = -2; n < 3; n++)
+					{
+						int checkY = (i+m);
+						int checkX = (j+n);
+
+						if(checkX < 1 || checkX > WIDTH-1 || checkY < 1 || checkY > HEIGHT-1)
+							continue;
+
+						b = input[frame.cols*cn*checkY + checkX*cn + 0];
+						g = input[frame.cols*cn*checkY + checkX*cn + 1];
+						r = input[frame.cols*cn*checkY + checkX*cn + 2];
+
+						float h2, s2, v2;
+						RGBtoHSV(r,g,b,&h2,&s2,&v2);
+						HSV hsv2 = {h, s, v};
+
+						if(isColor(hsv2, color_B) == TRUE)
+							cnt++;
+					}
+				}
+
+				if (cnt >= 15)
+				{
+					reValue.x = j;
+					reValue.y = i;
+
+					return reValue;
+				}
+			}
+		}
+	}
+
+	// 여기까지오면 못 찾은것
+	return reValue;
+
+}
+
+
 
 int isColor(HSV hsv, ColorBoundary color_B){
 

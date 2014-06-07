@@ -106,13 +106,13 @@ void make_Thread()
 
 	sleep(1);
 
-/*	// AI_Module
+	// AI_Module
 	thr_id[0] = pthread_create(&p_threads[0], NULL, AI_Module, (void*)NULL);
 	if (thr_id[0] < 0) {
 		perror("AI_Module thread create error : ");
 		exit(0);
 	}
-*/
+
 	// Network Layer
 	thr_id[1] = pthread_create(&p_threads[1], NULL, net_Layer, (void*) NULL);
 	if (thr_id[1] < 0) {
@@ -121,7 +121,7 @@ void make_Thread()
 	}
 
 	int status;
-//	pthread_join(p_threads[0], (void **)&status);
+	pthread_join(p_threads[0], (void **)&status);
 	pthread_join(p_threads[1], (void **)&status);
 	pthread_join(p_threads[2], (void **)&status);
 

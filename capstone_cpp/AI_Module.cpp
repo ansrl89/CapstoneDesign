@@ -29,6 +29,16 @@ int turn_Flag = 0;
  */
 void *AI_Module(void*)
 {
+	// solving password, password is 4, 3, 2, 1
+	send2Message(4);
+	usleep(500000);
+	send2Message(3);
+	usleep(500000);
+	send2Message(2);
+	usleep(500000);
+	send2Message(1);
+	usleep(500000);
+	// be ready with basic form
 	send2Message(BASIC_MOTION);
 	usleep(1000000);
 	printf("AI module is started!\n");
@@ -49,7 +59,8 @@ void *AI_Module(void*)
 		}
 
 		else{	// 로컬 플랜, 글로벌 플랜, 미션 모두 존재하지 않는다면 정지
-			break;
+			//break;
+			//sleep(1);
 		}
 	}
 }
@@ -65,23 +76,41 @@ void doLocalPlan(P_Q **l){
 	switch(current->command){
 	// 라인 트레이싱
 	case FIND_LINE:
-//		find_OnePoint(&x_Point, &y_Point);
+		find_OnePoint(&x_Point, &y_Point);
 		break;
 	case CONQUEST_TASK:
-		conquest_Task(&x_Last, &y_Last);
+		conquest_Task(&x_Point, &y_Point, &x_Last, &y_Last);
 		break;
 	case DECIDE_DIRECTION:
-//		robo_Direction = decide_Direction_By_OnePoint(x_Point, y_Point, &x_Last, &y_Last);
+		robo_Direction = decide_Direction_By_OnePoint(x_Point, y_Point, &x_Last, &y_Last);
 		break;
 	case TURNING:
-//		turnning(robo_Direction, &turn_Flag);
+		turnning(robo_Direction);
 		break;
 	case GO_RUN:
-//		go_Run(turn_Flag);
+		go_Run();
 		break;
 
+	// KICK
+	case FIND_BALL:
+		find_Ball(&x_Point, &y_Point);
+		break;
+	case GOTO_BALL:
+		goTo_Ball(&x_Point, &y_Point);
+		break;
+	case SET_DIRECTION:
 
-	// ...
+		break;
+	case PLACE_ONELINE:
+
+		break;
+	case READY_FOR_KICK:
+		ready_For_Kick();
+		break;
+	case KICKING:
+		kicking();
+		break;
+
 	default:
 		break;
 	}
@@ -124,8 +153,9 @@ int isExistGlobal(){
 int isExistMission(){
 	if (leavedMission > 0)
 	{
-		leavedMission--;
+//		leavedMission--;
 		return TRUE;
+
 	}
 
 	else{
@@ -141,7 +171,22 @@ int receiveMission(){
 
 	// 일단 라인트레이싱
 	// 미션을 어떻게 입력받을지 고민 필요
-	int re = LINE;
+	int re;
+
+	printf("before received!!\n");
+
+//	missionVariable = KICK;	 // 실제할 때는 주석
+	// 이 부분은 네트워크에서 정해줄 것
+	while(missionVariable < 0)
+	{
+		sleep(1);
+	}
+
+	printf("mission received!!\n");
+
+	re = missionVariable;
+	missionVariable = -1;
+
 	return re;
 }
 
@@ -201,7 +246,7 @@ P_Q *localPlanning(P_Q **g){
 	case CONTINUE_OR_STOP:
 		// 종료 사인을 받으면 종료해야 함
 		// 계속 할 거라면
-		if(TRUE)
+		if(lineStopFlag == 0)
 		{
 			if((*g) != NULL)
 				deleteNode(*g);
@@ -211,7 +256,9 @@ P_Q *localPlanning(P_Q **g){
 		// 종료 해야한다면
 		else
 		{
-
+			lineStopFlag = 0;
+			send2Message(BASIC_MOTION);
+			usleep(1000000);
 		}
 
 		break;
@@ -219,7 +266,24 @@ P_Q *localPlanning(P_Q **g){
 	/*
 	 * 패널티킥
 	 */
+	case APPROACH_BALL:
+		root = makeNode(FIND_BALL);
+		obj1 = makeNode(GOTO_BALL);
 
+		enQue(root, obj1);
+		break;
+	case SET_POS:
+		root = makeNode(SET_DIRECTION);
+		obj1 = makeNode(PLACE_ONELINE);
+
+		enQue(root, obj1);
+		break;
+	case KICK_IN:
+		root = makeNode(READY_FOR_KICK);
+		obj1 = makeNode(KICKING);
+
+		enQue(root, obj1);
+		break;
 
 	default:
 		break;
@@ -248,8 +312,14 @@ P_Q *makeGlobalPlan_Line(){
  * 패널티킥 미션에 대해서 글로벌 플래닝함
  */
 P_Q *makeGlobalPlan_Kick(){
+	P_Q *root = makeNode(APPROACH_BALL);
+	P_Q *obj1 = makeNode(SET_POS);
+	P_Q *obj2 = makeNode(KICK_IN);
 
-	return NULL;
+	enQue(root, obj1);
+	enQue(root, obj2);
+
+	return root;
 }
 
 /*

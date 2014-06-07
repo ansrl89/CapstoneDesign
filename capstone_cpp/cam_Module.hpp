@@ -21,10 +21,6 @@
 
 #define NOISE_COUNT 3
 
-#define LINE_SEARCH_SPACE_X1	60
-#define LINE_SEARCH_SPACE_X2	260
-#define LINE_SEARCH_SPACE_Y1	120
-#define LINE_SEARCH_SPACE_Y2	239
 //#define LINE_SEARCH_SPACE_Y2	1	// for debugging
 
 typedef struct{
@@ -66,7 +62,7 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
 ColorBoundary getBoundary(int color);
 
 POINT findOneColor(int start_X, int end_X, int start_Y, int end_Y, int color);
-
+POINT find_Pos_Of_Color(int minX, int maxX, int color);
 
 
 #endif /* CAM_MODULE_HPP_ */

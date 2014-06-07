@@ -57,14 +57,23 @@ using namespace cv;
 #define SEMKEY 0x200
 
 // image size
-#define WIDTH 320
-#define HEIGHT 240
+#define WIDTH 160
+#define HEIGHT 120
 
 typedef union semun {
 	int val;
 	struct semid_ds *buf;
 	ushort *array;
 } semun;
+
+
+extern int stream_Android;
+
+extern int lineStopFlag;
+
+extern int missionVariable;
+
+extern int peer_Desktop;
 
 
 extern int uart_fd;

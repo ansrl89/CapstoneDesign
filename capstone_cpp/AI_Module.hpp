@@ -33,6 +33,9 @@
 #define RUNNING						12
 #define CONTINUE_OR_STOP				13
 
+#define APPROACH_BALL	22
+#define SET_POS			23
+#define KICK_IN			24
 
 /*
  * 로컬 플랜 번호
@@ -45,6 +48,14 @@
 
 #define CONQUEST_TASK		115
 // ~~
+#define FIND_BALL				221
+#define GOTO_BALL				222
+
+#define SET_DIRECTION		231
+#define PLACE_ONELINE		232
+
+#define READY_FOR_KICK		241
+#define KICKING				242
 
 
 typedef struct plan_Que P_Q;
@@ -87,11 +98,19 @@ void deleteNode(P_Q *obj);
 /*
  * doLocalPlan
  */
+// LINE, OBSTACLE, STAIR
 int decide_Direction_By_OnePoint(int x, int y, int *last_X, int *last_Y);
 void find_OnePoint(int *x, int *y);
-void turnning(int direction, int *flag);
-void go_Run(int flag);
+void turnning(int direction);
+void go_Run();
 
-void conquest_Task(int *last_X, int *last_Y);
+void conquest_Task(int *x, int *y, int *last_X, int *last_Y);
+
+// KICK
+void find_Ball(int *x, int *y);
+void goTo_Ball(int *x, int *y);
+
+void ready_For_Kick();
+void kicking();
 
 #endif /* AI_MODULE_HPP_ */
